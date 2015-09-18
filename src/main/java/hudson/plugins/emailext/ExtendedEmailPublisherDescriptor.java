@@ -72,6 +72,11 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     private boolean useSsl;
 
     /**
+    * If true use TLS
+    */
+    private boolean useTls;
+
+    /**
      * The SMTP port to use for sending e-mail. Null for default to the
      * environment, which is usually <tt>25</tt>.
      */
@@ -199,6 +204,9 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
             }
             props.put("mail.smtp.socketFactory.fallback", "false");
         }
+        if (useTls) {
+            props.put("mail.smtp.starttls.enable", "true");
+        }
         if (smtpAuthUsername != null) {
             props.put("mail.smtp.auth", "true");
         }
@@ -242,6 +250,10 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
 
     public boolean getUseSsl() {
         return useSsl;
+    }
+
+    public boolean getUseTls() {
+        return useTls;
     }
 
     public String getSmtpPort() {
@@ -381,6 +393,9 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
 
         // specify if the mail server uses ssl for authentication
         useSsl = req.hasParameter("ext_mailer_smtp_use_ssl");
+
+        // specify if the mail server uses tls for authentication
+        useTls = req.hasParameter("ext_mailer_smtp_use_tls");
 
         // specify custom smtp port
         smtpPort = nullify(req.getParameter("ext_mailer_smtp_port"));
