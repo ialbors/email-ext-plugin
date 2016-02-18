@@ -6,28 +6,13 @@ import groovy.lang.GroovyShell;
 import groovy.text.SimpleTemplateEngine;
 import groovy.text.Template;
 import hudson.ExtensionList;
-import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
+import hudson.model.TaskListener;
 import hudson.plugins.emailext.ExtendedEmailPublisherDescriptor;
 import hudson.plugins.emailext.GroovyTemplateConfig.GroovyTemplateConfigProvider;
 import hudson.plugins.emailext.ScriptSandbox;
 import hudson.plugins.emailext.plugins.EmailToken;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.ref.Reference;
-import java.lang.ref.SoftReference;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import jenkins.model.Jenkins;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -35,6 +20,15 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.jenkinsci.lib.configprovider.ConfigProvider;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 import org.kohsuke.groovy.sandbox.SandboxTransformer;
+
+import java.io.*;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @EmailToken
 public class ScriptContent extends AbstractEvalContent {
@@ -92,7 +86,7 @@ public class ScriptContent extends AbstractEvalContent {
     }
 
     @Override
-    protected ConfigProvider getConfigProvider() {
+    protected synchronized ConfigProvider getConfigProvider() {
         if(configProvider == null) {
             ExtensionList<ConfigProvider> providers = ConfigProvider.all();
             configProvider = providers.get(GroovyTemplateConfigProvider.class);
@@ -114,7 +108,7 @@ public class ScriptContent extends AbstractEvalContent {
         String result;
         
         Map<String, Object> binding = new HashMap<String, Object>();
-        ExtendedEmailPublisherDescriptor descriptor = Jenkins.getInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
+        ExtendedEmailPublisherDescriptor descriptor = Jenkins.getActiveInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
         binding.put("build", build);
         binding.put("listener", listener);
         binding.put("it", new ScriptContentBuildWrapper(build));
@@ -122,7 +116,7 @@ public class ScriptContent extends AbstractEvalContent {
         binding.put("project", build.getParent());
         
         // we add the binding to the SimpleTemplateEngine instead of the shell
-        GroovyShell shell = createEngine(descriptor, Collections.EMPTY_MAP);
+        GroovyShell shell = createEngine(descriptor, Collections.<String, Object>emptyMap());
         SimpleTemplateEngine engine = new SimpleTemplateEngine(shell);
         try {
             String text = IOUtils.toString(templateStream);
@@ -157,7 +151,7 @@ public class ScriptContent extends AbstractEvalContent {
             throws IOException {
         String result = "";
         Map binding = new HashMap<String, Object>();
-        ExtendedEmailPublisherDescriptor descriptor = Jenkins.getInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
+        ExtendedEmailPublisherDescriptor descriptor = Jenkins.getActiveInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
         
         binding.put("build", build);
         binding.put("it", new ScriptContentBuildWrapper(build));
@@ -166,7 +160,7 @@ public class ScriptContent extends AbstractEvalContent {
         binding.put("logger", listener.getLogger());
 
         GroovyShell shell = createEngine(descriptor, binding);
-        Object res = shell.evaluate(new InputStreamReader(scriptStream));
+        Object res = shell.evaluate(new InputStreamReader(scriptStream, descriptor.getCharset()));
         if (res != null) {
             result = res.toString();
         }
@@ -184,7 +178,7 @@ public class ScriptContent extends AbstractEvalContent {
     private GroovyShell createEngine(ExtendedEmailPublisherDescriptor descriptor, Map<String, Object> variables)
             throws FileNotFoundException, IOException {
 
-        ClassLoader cl = Jenkins.getInstance().getPluginManager().uberClassLoader;
+        ClassLoader cl = Jenkins.getActiveInstance().getPluginManager().uberClassLoader;
         ScriptSandbox sandbox = null;
         CompilerConfiguration cc = new CompilerConfiguration();
         cc.setScriptBaseClass(EmailExtScript.class.getCanonicalName()); 

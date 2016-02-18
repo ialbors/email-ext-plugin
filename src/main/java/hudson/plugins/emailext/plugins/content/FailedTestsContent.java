@@ -1,8 +1,8 @@
 package hudson.plugins.emailext.plugins.content;
 
+import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
-import hudson.plugins.emailext.plugins.EmailToken;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
 import java.io.IOException;
@@ -16,7 +16,7 @@ import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
  * 
  * @author markltbaker
  */
-@EmailToken
+@Extension
 public class FailedTestsContent extends DataBoundTokenMacro {
 
     @Parameter
@@ -113,27 +113,27 @@ public class FailedTestsContent extends DataBoundTokenMacro {
         } else {
             local.append(failedTest.getFullName());
         }
-        local.append(".");
+        local.append('.');
 
         local.append(failedTest.getDisplayName());
-        local.append("\n");
+        local.append('\n');
 
         if (showMessage) {
-            local.append("\n");
+            local.append('\n');
             local.append("Error Message:\n");
             local.append(failedTest.getErrorDetails());
-            local.append("\n");
+            local.append('\n');
         }
         
         if (showStack) {
-            local.append("\n");
+            local.append('\n');
             local.append("Stack Trace:\n");
             local.append(failedTest.getErrorStackTrace());
-            local.append("\n");
+            local.append('\n');
         }
 
         if (showMessage || showStack) {
-            local.append("\n");
+            local.append('\n');
         }
 
         if(local.length() > lengthLeft) {

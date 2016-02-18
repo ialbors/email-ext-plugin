@@ -27,18 +27,24 @@ import hudson.Plugin;
 import hudson.model.AbstractBuild;
 import hudson.model.TaskListener;
 import hudson.plugins.emailext.ExtendedEmailPublisher;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+
+import hudson.plugins.emailext.ExtendedEmailPublisherDescriptor;
 import jenkins.model.Jenkins;
+
 import org.apache.commons.io.FilenameUtils;
 import org.jenkinsci.lib.configprovider.ConfigProvider;
 import org.jenkinsci.lib.configprovider.model.Config;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
+
+import java.io.*;
 
 /**
  *
@@ -62,7 +68,7 @@ public abstract class AbstractEvalContent extends DataBoundTokenMacro {
     }
     
     public static File scriptsFolder() {
-        return new File(Jenkins.getInstance().getRootDir(), EMAIL_TEMPLATES_DIRECTORY);
+        return new File(Jenkins.getActiveInstance().getRootDir(), EMAIL_TEMPLATES_DIRECTORY);
     }
     
     protected abstract ConfigProvider getConfigProvider();
@@ -115,20 +121,20 @@ public abstract class AbstractEvalContent extends DataBoundTokenMacro {
     }
     
     private InputStream getManagedFile(String fileName) {
-        Plugin plugin = Jenkins.getInstance().getPlugin("config-file-provider");
         InputStream stream = null;
-        if(plugin != null) {
+        Plugin plugin = Jenkins.getActiveInstance().getPlugin("config-file-provider");
+        if (plugin != null) {
             Config config = null;
             ConfigProvider provider = getConfigProvider();
-            for(Config c : provider.getAllConfigs()) {
-                if(c.name.equalsIgnoreCase(fileName) && provider.isResponsibleFor(c.id)) {
+            for (Config c : provider.getAllConfigs()) {
+                if (c.name.equalsIgnoreCase(fileName) && provider.isResponsibleFor(c.id)) {
                     config = c;
                     break;
-                }                    
+                }
             }
-            
-            if(config != null) {
-                stream = new ByteArrayInputStream(config.content.getBytes());
+
+            if (config != null) {
+               stream = new ByteArrayInputStream(config.content.getBytes());
             }
         }
         return stream;

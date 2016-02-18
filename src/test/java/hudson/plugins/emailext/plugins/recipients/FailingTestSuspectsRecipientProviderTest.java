@@ -48,8 +48,6 @@ import jenkins.model.Jenkins;
 })
 public class FailingTestSuspectsRecipientProviderTest {
 
-    private static final String AT_DOMAIN = "@DOMAIN";
-
     @Before
     public void before() throws Exception {
         final Jenkins jenkins = PowerMockito.mock(Jenkins.class);
@@ -59,7 +57,7 @@ public class FailingTestSuspectsRecipientProviderTest {
 
         PowerMockito.when(jenkins.getDescriptorByType(ExtendedEmailPublisherDescriptor.class)).thenReturn(extendedEmailPublisherDescriptor);
         PowerMockito.mockStatic(Jenkins.class);
-        PowerMockito.doReturn(jenkins).when(Jenkins.class, "getInstance");
+        PowerMockito.doReturn(jenkins).when(Jenkins.class, "getActiveInstance");
 
         final Mailer.DescriptorImpl descriptor = PowerMockito.mock(Mailer.DescriptorImpl.class);
         PowerMockito.when(descriptor.getDefaultSuffix()).thenReturn("DOMAIN");

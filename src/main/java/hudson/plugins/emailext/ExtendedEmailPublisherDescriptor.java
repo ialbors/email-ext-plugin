@@ -104,6 +104,11 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
      */
     private String defaultPresendScript = "";
 
+    /**
+     * This is the global default post-send script.
+     */
+    private String defaultPostsendScript = "";
+
     private List<GroovyScriptPath> defaultClasspath = new ArrayList<GroovyScriptPath>();
     
     private transient List<EmailTriggerDescriptor> defaultTriggers = new ArrayList<EmailTriggerDescriptor>();
@@ -158,6 +163,17 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
      * Enables the "Watch This Job" feature
      */
     private boolean enableWatching;
+
+    public ExtendedEmailPublisherDescriptor() {
+        super(ExtendedEmailPublisher.class);
+        load();
+        if (defaultBody == null && defaultSubject == null && emergencyReroute == null) {
+            defaultBody = ExtendedEmailPublisher.DEFAULT_BODY_TEXT;
+            defaultSubject = ExtendedEmailPublisher.DEFAULT_SUBJECT_TEXT;
+            emergencyReroute = ExtendedEmailPublisher.DEFAULT_EMERGENCY_REROUTE_TEXT;
+            enableSecurity = false;
+        }
+    }
 
     @Override
     public String getDisplayName() {
@@ -233,7 +249,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     }
 
     public String getHudsonUrl() {
-        return Jenkins.getInstance().getRootUrl();
+        return Jenkins.getActiveInstance().getRootUrl();
     }
 
     public String getSmtpServer() {
@@ -340,38 +356,31 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         return defaultPresendScript;
     }
 
+    public String getDefaultPostsendScript() {
+        return defaultPostsendScript;
+    }
+
     public List<GroovyScriptPath> getDefaultClasspath() {
         return defaultClasspath;
     }
     
     public List<String> getDefaultTriggerIds() {
-        if(defaultTriggerIds.isEmpty()) {
-            if(!defaultTriggers.isEmpty()) {
+        if (defaultTriggerIds.isEmpty()) {
+            if (!defaultTriggers.isEmpty()) {
                 defaultTriggerIds.clear();
                 for(EmailTriggerDescriptor t : this.defaultTriggers) {
                     // we have to do the below because a bunch of stuff is not serialized for the Descriptor
-                    EmailTriggerDescriptor d = (EmailTriggerDescriptor)Jenkins.getInstance().getDescriptorByType(t.getClass());                
+                    EmailTriggerDescriptor d = (EmailTriggerDescriptor)Jenkins.getActiveInstance().getDescriptorByType(t.getClass());
                     if(!defaultTriggerIds.contains(d.getId())) {
                         defaultTriggerIds.add(d.getId());
                     }
                 }
             } else {
-                defaultTriggerIds.add(Jenkins.getInstance().getDescriptor(FailureTrigger.class).getId());
+                defaultTriggerIds.add(Jenkins.getActiveInstance().getDescriptor(FailureTrigger.class).getId());
             }
             save();
         }
         return defaultTriggerIds;
-    }
-
-    public ExtendedEmailPublisherDescriptor() {
-        super(ExtendedEmailPublisher.class);
-        load();
-        if (defaultBody == null && defaultSubject == null && emergencyReroute == null) {
-            defaultBody = ExtendedEmailPublisher.DEFAULT_BODY_TEXT;
-            defaultSubject = ExtendedEmailPublisher.DEFAULT_SUBJECT_TEXT;
-            emergencyReroute = ExtendedEmailPublisher.DEFAULT_EMERGENCY_REROUTE_TEXT;
-            enableSecurity = false;
-        }
     }
 
     @Override
@@ -412,6 +421,8 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
                 ? req.getParameter("ext_mailer_default_replyto") : "";
         defaultPresendScript = nullify(req.getParameter("ext_mailer_default_presend_script")) != null
                 ? req.getParameter("ext_mailer_default_presend_script") : "";
+        defaultPostsendScript = nullify(req.getParameter("ext_mailer_default_postsend_script")) != null
+                ? req.getParameter("ext_mailer_default_postsend_script") : "";
         if (req.hasParameter("ext_mailer_default_classpath")) {
             defaultClasspath.clear();
             for (String s : req.getParameterValues("ext_mailer_default_classpath")) {
@@ -420,7 +431,6 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         }
         debugMode = req.hasParameter("ext_mailer_debug_mode");
 
-        //enableWatching = req.getParameter("ext_mailer_enable_watching") != null;
         // convert the value into megabytes (1024 * 1024 bytes)
         maxAttachmentSize = nullify(req.getParameter("ext_mailer_max_attachment_size")) != null
                 ? (Long.parseLong(req.getParameter("ext_mailer_max_attachment_size")) * 1024 * 1024) : -1;
@@ -455,7 +465,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         if(!ids.isEmpty()) {
             defaultTriggerIds.clear();
             for(String id : ids) {
-               EmailTriggerDescriptor d = (EmailTriggerDescriptor)Jenkins.getInstance().getDescriptor(id);
+               EmailTriggerDescriptor d = (EmailTriggerDescriptor)Jenkins.getActiveInstance().getDescriptor(id);
                if(d != null) {
                    defaultTriggerIds.add(id);
                }
