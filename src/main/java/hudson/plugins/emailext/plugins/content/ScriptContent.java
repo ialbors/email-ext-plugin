@@ -60,10 +60,10 @@ public class ScriptContent extends AbstractEvalContent {
         
         try {
             if (!StringUtils.isEmpty(script)) {
-                inputStream = getFileInputStream(script, ".groovy");
+                inputStream = getFileInputStream(context.getWorkspace(), script, ".groovy");
                 result = executeScript(context, listener, inputStream);
             } else {
-                inputStream = getFileInputStream(template, ".template");
+                inputStream = getFileInputStream(context.getWorkspace(), template, ".template");
                 result = renderTemplate(context, listener, inputStream);
             }
         } catch (FileNotFoundException e) {
@@ -174,7 +174,7 @@ public class ScriptContent extends AbstractEvalContent {
      * @throws IOException
      */
     private GroovyShell createEngine(ExtendedEmailPublisherDescriptor descriptor, Map<String, Object> variables)
-            throws FileNotFoundException, IOException {
+            throws IOException {
 
         ClassLoader cl = Jenkins.getActiveInstance().getPluginManager().uberClassLoader;
         CompilerConfiguration cc = new CompilerConfiguration();
