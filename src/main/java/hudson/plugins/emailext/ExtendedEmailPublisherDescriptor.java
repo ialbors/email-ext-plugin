@@ -109,11 +109,11 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
      */
     private String defaultPostsendScript = "";
 
-    private List<GroovyScriptPath> defaultClasspath = new ArrayList<GroovyScriptPath>();
+    private List<GroovyScriptPath> defaultClasspath = new ArrayList<>();
     
-    private transient List<EmailTriggerDescriptor> defaultTriggers = new ArrayList<EmailTriggerDescriptor>();
+    private transient List<EmailTriggerDescriptor> defaultTriggers = new ArrayList<>();
     
-    private List<String> defaultTriggerIds = new ArrayList<String>();
+    private List<String> defaultTriggerIds = new ArrayList<>();
     
     /**
      * This is the global emergency email address
@@ -429,7 +429,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
 
         // convert the value into megabytes (1024 * 1024 bytes)
         maxAttachmentSize = nullify(req.getParameter("ext_mailer_max_attachment_size")) != null
-                ? (Long.parseLong(req.getParameter("ext_mailer_max_attachment_size")) * 1024 * 1024) : -1;
+                ? Long.parseLong(req.getParameter("ext_mailer_max_attachment_size")) * 1024 * 1024 : -1;
         recipientList = nullify(req.getParameter("ext_mailer_default_recipients")) != null
                 ? req.getParameter("ext_mailer_default_recipients") : "";
 
@@ -448,7 +448,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
             listId = null;
         }
 
-        List<String> ids = new ArrayList<String>();
+        List<String> ids = new ArrayList<>();
         if(formData.optJSONArray("defaultTriggers") != null) {
             for(Object id : formData.getJSONArray("defaultTriggers")) {
                ids.add(id.toString());

@@ -103,7 +103,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
     /**
      * This is the list of email theTriggers that the project has configured
      */
-    public List<EmailTrigger> configuredTriggers = new ArrayList<EmailTrigger>();
+    public List<EmailTrigger> configuredTriggers = new ArrayList<>();
 
     /**
      * The contentType of the emails for this project (text/html, text/plain,
@@ -217,7 +217,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
      */
     public List<EmailTrigger> getConfiguredTriggers() {
         if (configuredTriggers == null) {
-            configuredTriggers = new ArrayList<EmailTrigger>();
+            configuredTriggers = new ArrayList<>();
         }
         return configuredTriggers;
     }
@@ -279,7 +279,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
         }
 
         //Go through and remove triggers that are replaced by others
-        List<String> replacedTriggers = new ArrayList<String>();
+        List<String> replacedTriggers = new ArrayList<>();
 
         for (Object tName : triggered.keySet()) {
             String triggerName = (String) tName;
@@ -312,7 +312,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
                         }
 
                         //Go through and remove triggers that are replaced by others
-                        replacedTriggers = new ArrayList<String>();
+                        replacedTriggers = new ArrayList<>();
 
                         for (Object tName : triggered.keySet()) {
                             String triggerName = (String) tName;
@@ -392,8 +392,8 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
                             break;
                         } catch (SendFailedException e) {
                             if (e.getNextException() != null
-                                    && ((e.getNextException() instanceof SocketException)
-                                    || (e.getNextException() instanceof ConnectException))) {
+                                    && (e.getNextException() instanceof SocketException
+                                    || e.getNextException() instanceof ConnectException)) {
                                 context.getListener().getLogger().println("Socket error sending email, retrying once more in 10 seconds...");
                                 transport.close();
                                 Thread.sleep(10000);
@@ -427,7 +427,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
                                 break;
                             }
                         } catch (MessagingException e) {
-                            if (e.getNextException() != null && (e.getNextException() instanceof ConnectException)) {
+                            if (e.getNextException() != null && e.getNextException() instanceof ConnectException) {
                                 context.getListener().getLogger().println("Connection error sending email, retrying once more in 10 seconds...");
                                 transport.close();
                                 Thread.sleep(10000);
@@ -469,7 +469,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
     }
 
     public List<TokenMacro> getRuntimeMacros(ExtendedEmailPublisherContext context) {
-        List<TokenMacro> macros = new ArrayList<TokenMacro>();
+        List<TokenMacro> macros = new ArrayList<>();
         macros.add(new TriggerNameContent(context.getTrigger().getDescriptor().getDisplayName()));
         return macros;
     }
@@ -525,7 +525,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
 
             try {
                 shell.evaluate(script);
-                cancel = ((Boolean) shell.getVariable("cancel"));
+                cancel = (Boolean) shell.getVariable("cancel");
                 debug(context.getListener().getLogger(), "%s script set cancel to %b", StringUtils.capitalize(scriptName), cancel);
             } catch (SecurityException e) {
                 context.getListener().getLogger().println(StringUtils.capitalize(scriptName) + " script tried to access secured objects: " + e.getMessage());
@@ -548,9 +548,9 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
      * @return the new expanded classloader
      */
     private void expandClasspath(ExtendedEmailPublisherContext context, CompilerConfiguration cc) {
-        List<String> classpathList = new ArrayList<String>();
+        List<String> classpathList = new ArrayList<>();
 
-        if ((classpath != null) && !classpath.isEmpty()) {
+        if (classpath != null && !classpath.isEmpty()) {
             for (GroovyScriptPath path : classpath) {
                 classpathList.add(ContentBuilder.transformText(path.getPath(), context, getRuntimeMacros(context)));
             }
@@ -625,9 +625,9 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
         }
 
         // Get the recipients from the global list of addresses
-        Set<InternetAddress> to = new LinkedHashSet<InternetAddress>();
-        Set<InternetAddress> cc = new LinkedHashSet<InternetAddress>();
-        Set<InternetAddress> bcc = new LinkedHashSet<InternetAddress>();
+        Set<InternetAddress> to = new LinkedHashSet<>();
+        Set<InternetAddress> cc = new LinkedHashSet<>();
+        Set<InternetAddress> bcc = new LinkedHashSet<>();
 
         String emergencyReroute = descriptor.getEmergencyReroute();
 
@@ -645,7 +645,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
         }
 
         // remove the excluded recipients
-        Set<InternetAddress> excludedRecipients = new LinkedHashSet<InternetAddress>();
+        Set<InternetAddress> excludedRecipients = new LinkedHashSet<>();
         for (InternetAddress recipient : to) {
             if (EmailRecipientUtils.isExcludedRecipient(recipient.getAddress(), context.getListener())) {
                 excludedRecipients.add(recipient);
@@ -663,7 +663,7 @@ public class ExtendedEmailPublisher extends Notifier implements MatrixAggregatab
             msg.setRecipients(Message.RecipientType.BCC, bcc.toArray(new InternetAddress[bcc.size()]));
         }
 
-        Set<InternetAddress> replyToAddresses = new LinkedHashSet<InternetAddress>();
+        Set<InternetAddress> replyToAddresses = new LinkedHashSet<>();
 
         if (StringUtils.isNotBlank(replyTo)) {
             EmailRecipientUtils.addAddressesFromRecipientList(replyToAddresses, null, null, EmailRecipientUtils.getRecipientList(context, replyTo), env, context.getListener());

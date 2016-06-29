@@ -20,8 +20,6 @@ import java.io.InputStream;
 
 @EmailToken
 public class JellyScriptContent extends AbstractEvalContent {
-    
-    private static Object configProvider;
 
     public static final String MACRO_NAME = "JELLY_SCRIPT";
     private static final String DEFAULT_HTML_TEMPLATE_NAME = "html";
@@ -50,15 +48,11 @@ public class JellyScriptContent extends AbstractEvalContent {
         } finally {
             IOUtils.closeQuietly(inputStream);
         }
-    }    
+    }
 
     @Override
-    protected ConfigProvider getConfigProvider() {
-        if(configProvider == null) {
-            ExtensionList<ConfigProvider> providers = ConfigProvider.all();
-            configProvider = providers.get(JellyTemplateConfigProvider.class);
-        }
-        return (ConfigProvider)configProvider;
+    protected Class<? extends ConfigProvider> getProviderClass() {
+        return JellyTemplateConfigProvider.class;
     }
 
     private String renderContent(AbstractBuild<?, ?> build, InputStream inputStream, TaskListener listener)

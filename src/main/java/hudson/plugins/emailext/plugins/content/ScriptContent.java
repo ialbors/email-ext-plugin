@@ -30,8 +30,6 @@ import java.util.logging.Logger;
 
 @EmailToken
 public class ScriptContent extends AbstractEvalContent {
-    
-    private static Object configProvider;
 
     private static final Logger LOGGER = Logger.getLogger(ScriptContent.class.getName());
     
@@ -45,7 +43,7 @@ public class ScriptContent extends AbstractEvalContent {
     
     public static final String MACRO_NAME = "SCRIPT";
     
-    private static final Map<String,Reference<Template>> templateCache = new HashMap<String,Reference<Template>>();
+    private static final Map<String,Reference<Template>> templateCache = new HashMap<>();
     
     public ScriptContent() {
         super(MACRO_NAME);
@@ -84,12 +82,8 @@ public class ScriptContent extends AbstractEvalContent {
     }
 
     @Override
-    protected synchronized ConfigProvider getConfigProvider() {
-        if(configProvider == null) {
-            ExtensionList<ConfigProvider> providers = ConfigProvider.all();
-            configProvider = providers.get(GroovyTemplateConfigProvider.class);
-        }
-        return (ConfigProvider)configProvider;
+    protected Class<? extends ConfigProvider> getProviderClass () {
+        return GroovyTemplateConfigProvider.class;
     }
     
     /**
@@ -105,7 +99,7 @@ public class ScriptContent extends AbstractEvalContent {
         
         String result;
         
-        Map<String, Object> binding = new HashMap<String, Object>();
+        Map<String, Object> binding = new HashMap<>();
         ExtendedEmailPublisherDescriptor descriptor = Jenkins.getActiveInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
         binding.put("build", build);
         binding.put("listener", listener);
@@ -124,7 +118,7 @@ public class ScriptContent extends AbstractEvalContent {
                 tmpl = templateR == null ? null : templateR.get();
                 if (tmpl == null) {
                     tmpl = engine.createTemplate(text);
-                    templateCache.put(text, new SoftReference<Template>(tmpl));
+                    templateCache.put(text, new SoftReference<>(tmpl));
                 }
             }
             result = tmpl.make(binding).toString();
@@ -148,7 +142,7 @@ public class ScriptContent extends AbstractEvalContent {
     private String executeScript(AbstractBuild<?, ?> build, TaskListener listener, InputStream scriptStream)
             throws IOException {
         String result = "";
-        Map binding = new HashMap<String, Object>();
+        Map binding = new HashMap<>();
         ExtendedEmailPublisherDescriptor descriptor = Jenkins.getActiveInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
         
         binding.put("build", build);

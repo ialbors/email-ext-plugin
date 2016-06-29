@@ -18,8 +18,6 @@ import java.util.logging.Logger;
 
 @EmailToken
 public class TemplateContent extends AbstractEvalContent {
-    
-    private static Object configProvider;
 
     private static final Logger LOGGER = Logger.getLogger(TemplateContent.class.getName());
     
@@ -52,14 +50,9 @@ public class TemplateContent extends AbstractEvalContent {
         }
         return result;
     }
-    
-    @Override
-    protected ConfigProvider getConfigProvider() {
-        if(configProvider == null) {
-            ExtensionList<ConfigProvider> providers = ConfigProvider.all();
-            configProvider = providers.get(CustomConfigProvider.class);
-        }
-        return (ConfigProvider)configProvider;
+
+    protected Class<? extends ConfigProvider> getProviderClass() {
+        return CustomConfigProvider.class;
     }
     
     @Override

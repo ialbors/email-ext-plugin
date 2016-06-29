@@ -132,13 +132,13 @@ public class AttachmentUtils implements Serializable {
         if (ws == null) {
             context.getListener().error("Error: No workspace found!");
         } else if (!StringUtils.isBlank(attachmentsPattern)) {
-            attachments = new ArrayList<MimeBodyPart>();
+            attachments = new ArrayList<>();
 
             FilePath[] files = ws.list(ContentBuilder.transformText(attachmentsPattern, context, null));
 
             for (FilePath file : files) {
                 if (maxAttachmentSize > 0
-                        && (totalAttachmentSize + file.length()) >= maxAttachmentSize) {
+                        && totalAttachmentSize + file.length() >= maxAttachmentSize) {
                     context.getListener().getLogger().println("Skipping `" + file.getName()
                             + "' (" + file.length()
                             + " bytes) - too large for maximum attachments size");
