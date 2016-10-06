@@ -1,7 +1,9 @@
 package hudson.plugins.emailext.plugins;
 
+import net.htmlparser.jericho.Source;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,8 +14,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.MessageFormat;
 import java.util.StringTokenizer;
-import net.htmlparser.jericho.Source;
-import org.apache.commons.lang.StringEscapeUtils;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * <p>
@@ -36,6 +38,7 @@ import org.apache.commons.lang.StringEscapeUtils;
  * @author <a href="https://github.com/rahulsom">Rahul Somasunderam</a>
  */
 public class CssInliner {
+    private final static Logger LOG = Logger.getLogger(CssInliner.class.getName());
 
     public static final String CSS_STYLE = "cssstyle";
     public static final String STYLE_ATTR = "style";
@@ -119,7 +122,7 @@ public class CssInliner {
 
                     img.attr(IMG_SRC_ATTR, MessageFormat.format("data:{0};base64,{1}", contentType, base64));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOG.log(Level.WARNING, null, e);
                 }
             }
         }

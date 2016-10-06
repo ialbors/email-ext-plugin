@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.3</version>
+        <version>2.7</version>
         <relativePath />
     </parent>
 
@@ -18,7 +18,7 @@
 
     <artifactId>email-ext</artifactId>
     <packaging>hpi</packaging>
-    <version>2.45-SNAPSHOT</version>
+    <version>2.52-SNAPSHOT</version>
     <name>Email Extension Plugin</name>
     <description>EMail Extension Plugin</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Email-ext+plugin</url>
@@ -33,6 +33,8 @@
         <workflow.version>1.10</workflow.version>
         <jenkins.version>1.609.2</jenkins.version>
         <java.level>7</java.level>
+        <concurrency>2</concurrency>
+        <argLine />
     </properties>
 
     <developers>
@@ -112,6 +114,12 @@
             <artifactId>analysis-core</artifactId>
             <version>1.54</version>
             <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>asm</groupId>
+                    <artifactId>asm</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
@@ -122,7 +130,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>token-macro</artifactId>
-            <version>1.12.1</version>
+            <version>2.0</version>
         </dependency>
 
         <!-- workflow stuff -->
@@ -162,7 +170,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -215,7 +222,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <!-- static analysys -->
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -251,12 +257,6 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>-XX:MaxPermSize=512m -Dfile.encoding=${project.build.sourceEncoding} ${argLine}</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>clirr-maven-plugin</artifactId>
                 <version>2.7</version>
@@ -274,42 +274,30 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>3.0.3</version>
+                <artifactId>maven-release-plugin</artifactId>
                 <configuration>
-                    <xmlOutput>true</xmlOutput>
-                    <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
-                    <failOnError>false</failOnError>
+                    <arguments>-DskipTests=true</arguments>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
 
     <profiles>
         <profile>
-            <id>jenkins-release</id>
+            <id>permgen</id>
+            <activation>
+                <jdk>[,1.8)</jdk>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <argLine>-XX:MaxPermSize=512m -Dfile.encoding=${project.build.sourceEncoding}</argLine>
-                        </configuration>
-                    </plugin>
-                    <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skip>true</skip>
+                            <argLine>-Djava.awt.headless=true -XX:MaxPermSize=512m @{argLine}</argLine>
                         </configuration>
                     </plugin>
                 </plugins>

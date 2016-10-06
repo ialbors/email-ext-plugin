@@ -9,20 +9,18 @@ import hudson.plugins.emailext.plugins.content.JellyScriptContent;
 import hudson.plugins.emailext.plugins.content.ScriptContent;
 import hudson.util.FormValidation;
 import hudson.util.StreamTaskListener;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.lib.configprovider.ConfigProvider;
+import org.jenkinsci.lib.configprovider.model.Config;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import jenkins.model.Jenkins;
-
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.lib.configprovider.ConfigProvider;
-import org.jenkinsci.lib.configprovider.model.Config;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
  *
@@ -51,8 +49,7 @@ public class EmailExtTemplateAction implements Action {
     
     private String renderError(Exception ex) {
         StringBuilder builder = new StringBuilder();
-        builder.append("<h3>An error occured trying to render the template:</h3><br/>")
-                .append("<span style=\"color:red; font-weight:bold\">")
+        builder.append("<h3>An error occured trying to render the template:</h3><br/><span style=\"color:red; font-weight:bold\">")
                 .append(ex.toString().replace("\n", "<br/>")).append("</span>");
         return builder.toString();
     }

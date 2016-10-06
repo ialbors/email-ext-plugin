@@ -2,29 +2,29 @@ package hudson.plugins.emailext.plugins.recipients;
 
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
 import hudson.model.Job;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.model.User;
-import hudson.plugins.emailext.*;
+import hudson.plugins.emailext.EmailRecipientUtils;
+import hudson.plugins.emailext.ExtendedEmailPublisher;
+import hudson.plugins.emailext.ExtendedEmailPublisherContext;
+import hudson.plugins.emailext.Messages;
 import hudson.plugins.emailext.plugins.RecipientProvider;
 import hudson.plugins.emailext.plugins.RecipientProviderDescriptor;
 import hudson.scm.ChangeLogSet;
 import hudson.tasks.Mailer;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.mail.internet.InternetAddress;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import javax.mail.internet.InternetAddress;
-
-import jenkins.model.Jenkins;
-
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Sends emails to committers of upstream builds which triggered this build.
@@ -75,11 +75,7 @@ public class UpstreamComitterRecipientProvider extends RecipientProvider {
                 // check for getChangeSets which WorkflowRun has
                 Method m = build.getClass().getMethod("getChangeSets");
                 changeSets = (List<ChangeLogSet<? extends ChangeLogSet.Entry>>)m.invoke(build);
-            } catch (NoSuchMethodException e) {
-                listener.getLogger().print("Could not add upstream committers, build type does not provide change set");
-            } catch (InvocationTargetException e) {
-                listener.getLogger().print("Could not add upstream committers, build type does not provide change set");
-            } catch (IllegalAccessException e) {
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
                 listener.getLogger().print("Could not add upstream committers, build type does not provide change set");
             }
         }

@@ -1,15 +1,17 @@
 package hudson.plugins.emailext.plugins.content;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
-import java.io.IOException;
-
 import hudson.tasks.test.TestResult;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
+
+import java.io.IOException;
 
 /**
  * An EmailContent for failing tests. Only shows tests that have failed.
@@ -44,9 +46,15 @@ public class FailedTestsContent extends DataBoundTokenMacro {
     @Override
     public String evaluate(AbstractBuild<?, ?> build, TaskListener listener, String macroName)
             throws MacroEvaluationException, IOException, InterruptedException {
+        return evaluate(build, build.getWorkspace(), listener, macroName);
+    }
+
+    @Override
+    public String evaluate(Run<?, ?> run, FilePath workspace, TaskListener listener, String macroName)
+            throws MacroEvaluationException, IOException, InterruptedException {
 
         StringBuilder buffer = new StringBuilder();
-        AbstractTestResultAction<?> testResult = build.getAction(AbstractTestResultAction.class);
+        AbstractTestResultAction<?> testResult = run.getAction(AbstractTestResultAction.class);
 
         if (null == testResult) {
             return "No tests ran.";
@@ -57,7 +65,7 @@ public class FailedTestsContent extends DataBoundTokenMacro {
         if (failCount == 0) {
             buffer.append("All tests passed");
         } else {
-            buffer.append(failCount).append(" tests failed.").append('\n');
+            buffer.append(failCount).append(" tests failed.\n");
 
             boolean showOldFailures = !onlyRegressions;
             if(maxLength < Integer.MAX_VALUE) {
@@ -90,8 +98,8 @@ public class FailedTestsContent extends DataBoundTokenMacro {
     private int getTestAge(TestResult result) {
         if(result.isPassed())
             return 0;
-        else if (result.getOwner() != null) {
-            return result.getOwner().getNumber()-result.getFailedSince()+1;
+        else if (result.getRun() != null) {
+            return result.getRun().getNumber()-result.getFailedSince()+1;
         } else {
             return 0;
         }
@@ -111,11 +119,11 @@ public class FailedTestsContent extends DataBoundTokenMacro {
         local.append('.').append(failedTest.getDisplayName()).append('\n');
 
         if (showMessage) {
-            local.append('\n').append("Error Message:\n").append(failedTest.getErrorDetails()).append('\n');
+            local.append("\nError Message:\n").append(failedTest.getErrorDetails()).append('\n');
         }
         
         if (showStack) {
-            local.append('\n').append("Stack Trace:\n").append(failedTest.getErrorStackTrace()).append('\n');
+            local.append("\nStack Trace:\n").append(failedTest.getErrorStackTrace()).append('\n');
         }
 
         if (showMessage || showStack) {
