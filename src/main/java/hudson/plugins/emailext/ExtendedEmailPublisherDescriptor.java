@@ -14,6 +14,10 @@ import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ClasspathEntry;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
+import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -25,9 +29,13 @@ import javax.mail.internet.InternetAddress;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * These settings are global configurations
@@ -35,6 +43,7 @@ import java.util.Properties;
 @Extension
 public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<Publisher> {
 
+    public static final Logger LOGGER = Logger.getLogger(ExtendedEmailPublisherDescriptor.class.getName());
     /**
      * The default e-mail address suffix appended to the user name found from
      * changelog, to send e-mails. Null if not configured.
@@ -111,11 +120,11 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     private String defaultPostsendScript = "";
 
     private List<GroovyScriptPath> defaultClasspath = new ArrayList<>();
-    
+
     private transient List<EmailTriggerDescriptor> defaultTriggers = new ArrayList<>();
-    
+
     private List<String> defaultTriggerIds = new ArrayList<>();
-    
+
     /**
      * This is the global emergency email address
      */
@@ -173,6 +182,34 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
             defaultSubject = ExtendedEmailPublisher.DEFAULT_SUBJECT_TEXT;
             emergencyReroute = ExtendedEmailPublisher.DEFAULT_EMERGENCY_REROUTE_TEXT;
         }
+
+        if (Jenkins.getActiveInstance().isUseSecurity()
+                && (!StringUtils.isBlank(this.defaultPostsendScript)) || !StringUtils.isBlank(this.defaultPresendScript)) {
+            setDefaultPostsendScript(this.defaultPostsendScript);
+            setDefaultPresendScript(this.defaultPresendScript);
+            try {
+                setDefaultClasspath(this.defaultClasspath);
+            } catch (FormException e) {
+                //Some of the old configured classpaths probably used some environment variable, let's clean those out
+                List<GroovyScriptPath> newList = new ArrayList<>();
+                for (GroovyScriptPath path : defaultClasspath) {
+                    URL u = path.asURL();
+                    if (u != null) {
+                        try {
+                            new ClasspathEntry(u.toString());
+                            newList.add(path);
+                        } catch (MalformedURLException mfue) {
+                            LOGGER.log(Level.WARNING, "The default classpath contained a malformed url, will be ignored.", mfue);
+                        }
+                    }
+                }
+                try {
+                    setDefaultClasspath(newList);
+                } catch (FormException e1) {
+                    assert false : e1;
+                }
+            }
+        }
     }
 
     @Override
@@ -181,13 +218,15 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     }
 
     public String getAdminAddress() {
-        return JenkinsLocationConfiguration.get().getAdminAddress();
+        JenkinsLocationConfiguration configuration = JenkinsLocationConfiguration.get();
+        assert configuration != null;
+        return configuration.getAdminAddress();
     }
 
     public String getDefaultSuffix() {
         return defaultSuffix;
     }
-    
+
     public void setDefaultSuffix(String defaultSuffix) {
         this.defaultSuffix = defaultSuffix;
     }
@@ -261,8 +300,25 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         return smtpAuthUsername;
     }
 
+    @SuppressWarnings("unused")
+    public void setSmtpAuthUsername(String username) {
+        this.smtpAuthUsername = username;
+    }
+
     public String getSmtpAuthPassword() {
         return Secret.toString(smtpAuthPassword);
+    }
+
+    @SuppressWarnings("unused")
+    public void setSmtpAuthPassword(String password) {
+        this.smtpAuthPassword = Secret.fromString(password);
+    }
+
+    // Make API match Mailer plugin
+    @SuppressWarnings("unused")
+    public void setSmtpAuth(String userName, String password) {
+        setSmtpAuthUsername(userName);
+        setSmtpAuthPassword(password);
     }
 
     public boolean getUseSsl() {
@@ -272,9 +328,18 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     public boolean getUseTls() {
         return useTls;
     }
+    @SuppressWarnings("unused")
+    public void setUseSsl(boolean useSsl) {
+        this.useSsl = useSsl;
+    }
 
     public String getSmtpPort() {
         return smtpPort;
+    }
+
+    @SuppressWarnings("unused")
+    public void setSmtpPort(String port) {
+        this.smtpPort = nullify(port);
     }
 
     public String getCharset() {
@@ -285,16 +350,48 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         return c;
     }
 
+    @SuppressWarnings("unused")
+    public void setCharset(String charset) {
+        this.charset = charset;
+    }
+
     public String getDefaultContentType() {
         return defaultContentType;
+    }
+
+    @SuppressWarnings("unused")
+    public void setDefaultContentType(String contentType) {
+        if (StringUtils.isBlank(contentType)) {
+            this.defaultContentType = "text/plain";
+        } else {
+            this.defaultContentType = contentType;
+        }
     }
 
     public String getDefaultSubject() {
         return defaultSubject;
     }
 
+    @SuppressWarnings("unused")
+    public void setDefaultSubject(String subject) {
+        if (subject == null) {
+            this.defaultSubject = ExtendedEmailPublisher.DEFAULT_SUBJECT_TEXT;
+        } else {
+            this.defaultSubject = subject;
+        }
+    }
+
     public String getDefaultBody() {
         return defaultBody;
+    }
+
+    @SuppressWarnings("unused")
+    public void setDefaultBody(String body) {
+        if (body == null) {
+            this.defaultBody = ExtendedEmailPublisher.DEFAULT_BODY_TEXT;
+        } else {
+            this.defaultBody = body;
+        }
     }
 
     public String getEmergencyReroute() {
@@ -302,39 +399,80 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     }
 
     protected void setEmergencyReroute(String emergencyReroute) {
-        this.emergencyReroute = emergencyReroute;
+        if (emergencyReroute == null) {
+            this.emergencyReroute = ExtendedEmailPublisher.DEFAULT_EMERGENCY_REROUTE_TEXT;
+        } else {
+            this.emergencyReroute = emergencyReroute;
+        }
     }
 
     public long getMaxAttachmentSize() {
         return maxAttachmentSize;
     }
 
+    public void setMaxAttachmentSize(long bytes) {
+        if (bytes < 0) {
+            bytes = -1; // set to default "empty" value
+        }
+        this.maxAttachmentSize = bytes;
+    }
+
     public long getMaxAttachmentSizeMb() {
         return maxAttachmentSize / (1024 * 1024);
+    }
+
+    @SuppressWarnings("unused")
+    public void setMaxAttachmentSizeMb(long mb) {
+        setMaxAttachmentSize(mb * (1024 * 1024));
     }
 
     public String getDefaultRecipients() {
         return recipientList;
     }
 
+    @SuppressWarnings("unused")
+    public void setDefaultRecipients(String recipients) {
+        this.recipientList = ((recipients == null) ? "" : recipients);
+    }
+
     public String getExcludedCommitters() {
         return excludedCommitters;
+    }
+
+    @SuppressWarnings("unused")
+    public void setExcludedCommitters(String excluded) {
+        this.excludedCommitters = ((excluded == null) ? "" : excluded);
     }
 
     public boolean getOverrideGlobalSettings() {
         return overrideGlobalSettings;
     }
-    
+
     public String getListId() {
         return listId;
+    }
+
+    @SuppressWarnings("unused")
+    public void setListId(String id) {
+        this.listId = nullify(id);
     }
 
     public boolean getPrecedenceBulk() {
         return precedenceBulk;
     }
 
+    @SuppressWarnings("unused")
+    public void setPrecedenceBulk(boolean bulk) {
+        this.precedenceBulk = bulk;
+    }
+
     public String getDefaultReplyTo() {
         return defaultReplyTo;
+    }
+
+    @SuppressWarnings("unused")
+    public void setDefaultReplyTo(String to) {
+        this.defaultReplyTo = ((to == null) ? "" : to);
     }
 
     public boolean isSecurityEnabled() {
@@ -345,8 +483,18 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         return requireAdminForTemplateTesting;
     }
 
+    @SuppressWarnings("unused")
+    public void setAdminRequiredForTemplateTesting(boolean requireAdmin) {
+        this.requireAdminForTemplateTesting = requireAdmin;
+    }
+
     public boolean isWatchingEnabled() {
         return enableWatching;
+    }
+
+    @SuppressWarnings("unused")
+    public void setWatchingEnabled(boolean enabled) {
+        this.enableWatching = enabled;
     }
 
     public boolean isApplicable(Class<? extends AbstractProject> jobType) {
@@ -357,14 +505,48 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         return defaultPresendScript;
     }
 
+    @SuppressWarnings("unused")
+    public void setDefaultPresendScript(String script) {
+        script = StringUtils.trim(script);
+        this.defaultPresendScript = ScriptApproval.get().configuring(((script == null) ? "" : script),
+                                                                     GroovyLanguage.get(),
+                                                                     ApprovalContext.create().withCurrentUser());
+    }
+
     public String getDefaultPostsendScript() {
         return defaultPostsendScript;
+    }
+
+    @SuppressWarnings("unused")
+    public void setDefaultPostsendScript(String script) {
+        script = StringUtils.trim(script);
+        this.defaultPostsendScript = ScriptApproval.get().configuring(((script == null) ? "" : script),
+                                                                      GroovyLanguage.get(),
+                                                                      ApprovalContext.create().withCurrentUser());
     }
 
     public List<GroovyScriptPath> getDefaultClasspath() {
         return defaultClasspath;
     }
-    
+
+    public void setDefaultClasspath(List<GroovyScriptPath> defaultClasspath) throws FormException {
+        if (Jenkins.getActiveInstance().isUseSecurity()) {
+            ScriptApproval approval = ScriptApproval.get();
+            ApprovalContext context = ApprovalContext.create().withCurrentUser();
+            for (GroovyScriptPath path : defaultClasspath) {
+                URL u = path.asURL();
+                if (u != null) {
+                    try {
+                        approval.configuring(new ClasspathEntry(u.toString()), context);
+                    } catch (MalformedURLException e) {
+                        throw new FormException(e, "ext_mailer_default_classpath");
+                    }
+                }
+            }
+        }
+        this.defaultClasspath = defaultClasspath;
+    }
+
     public List<String> getDefaultTriggerIds() {
         if (defaultTriggerIds.isEmpty()) {
             if (!defaultTriggers.isEmpty()) {
@@ -420,15 +602,16 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         emergencyReroute = nullify(req.getParameter("ext_mailer_emergency_reroute"));
         defaultReplyTo = nullify(req.getParameter("ext_mailer_default_replyto")) != null
                 ? req.getParameter("ext_mailer_default_replyto") : "";
-        defaultPresendScript = nullify(req.getParameter("ext_mailer_default_presend_script")) != null
-                ? req.getParameter("ext_mailer_default_presend_script") : "";
-        defaultPostsendScript = nullify(req.getParameter("ext_mailer_default_postsend_script")) != null
-                ? req.getParameter("ext_mailer_default_postsend_script") : "";
+        setDefaultPresendScript(nullify(req.getParameter("ext_mailer_default_presend_script")) != null
+                ? req.getParameter("ext_mailer_default_presend_script") : "");
+        setDefaultPostsendScript(nullify(req.getParameter("ext_mailer_default_postsend_script")) != null
+                ? req.getParameter("ext_mailer_default_postsend_script") : "");
         if (req.hasParameter("ext_mailer_default_classpath")) {
-            defaultClasspath.clear();
+            List<GroovyScriptPath> cp = new ArrayList<>();
             for (String s : req.getParameterValues("ext_mailer_default_classpath")) {
-                defaultClasspath.add(new GroovyScriptPath(s));
+                cp.add(new GroovyScriptPath(s));
             }
+            setDefaultClasspath(cp);
         }
         debugMode = req.hasParameter("ext_mailer_debug_mode");
 
@@ -461,7 +644,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         } else if(StringUtils.isNotEmpty(formData.optString("defaultTriggers"))) {
             ids.add(formData.getString("defaultTriggers"));
         }
-        
+
         if(!ids.isEmpty()) {
             defaultTriggerIds.clear();
             for(String id : ids) {
@@ -471,7 +654,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
                }
             }
         }
-        
+
         if(!overrideGlobalSettings) {
             upgradeFromMailer();
         }

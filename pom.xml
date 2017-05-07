@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>2.7</version>
+        <version>2.23</version>
         <relativePath />
     </parent>
 
@@ -18,20 +18,20 @@
 
     <artifactId>email-ext</artifactId>
     <packaging>hpi</packaging>
-    <version>2.52-SNAPSHOT</version>
+    <version>2.58-SNAPSHOT</version>
     <name>Email Extension Plugin</name>
-    <description>EMail Extension Plugin</description>
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/Email-ext+plugin</url>
+    <description>Allows to configure every aspect of email notifications: when an email is sent, who should receive it and what the email says</description>
+    <url>https://wiki.jenkins-ci.org/display/JENKINS/Email-ext+plugin</url>
     <issueManagement>
         <system>JIRA</system>
-        <url>http://issues.jenkins-ci.org/secure/IssueNavigator.jspa?reset=true&amp;jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27email-ext-plugin%27</url>
+        <url>https://issues.jenkins-ci.org/secure/IssueNavigator.jspa?reset=true&amp;jqlQuery=project+%3D+JENKINS+AND+status+in+%28Open%2C+%22In+Progress%22%2C+Reopened%29+AND+component+%3D+%27email-ext-plugin%27</url>
     </issueManagement>
 
     <properties>
         <powermock.version>1.6.4</powermock.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <workflow.version>1.10</workflow.version>
-        <jenkins.version>1.609.2</jenkins.version>
+        <jenkins.version>2.0</jenkins.version>
         <java.level>7</java.level>
         <concurrency>2</concurrency>
         <argLine />
@@ -48,31 +48,49 @@
                 <role>maintainer</role>
             </roles>
         </developer>
-        <developer>
-            <id>slide</id>
+    </developers>
+
+    <contributors>
+        <contributor>
+            <!--<id>slide</id>-->
             <name>Alex Earl</name>
             <email>slide.o.mix@gmail.com</email>
-        </developer>
-        <developer>
-            <id>ashlux</id>
+            <roles>
+                <role>Past Maintainer</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <!--<id>ashlux</id>-->
             <name>Ash Lux</name>
             <email>ashlux@gmail.com</email>
-        </developer>
-        <developer>
-            <id>kdsweeney</id>
+            <roles>
+                <role>Past Maintainer</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <!--<id>kdsweeney</id>-->
             <name>Kyle Sweeney</name>
-        </developer>
-        <developer>
-            <id>krwalker</id>
+            <roles>
+                <role>Past Maintainer</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <!--<id>krwalker</id>-->
             <name>K. R. Walker</name>
             <email>krwalker@stellarscience.com</email>
-        </developer>
-        <developer>
-            <id>ssogabe</id>
+            <roles>
+                <role>Past Maintainer</role>
+            </roles>
+        </contributor>
+        <contributor>
+            <!--<id>ssogabe</id>-->
             <name>Seiji Sogabe</name>
             <email>s.sogabe@gmail.com</email>
-        </developer>
-    </developers>
+            <roles>
+                <role>Past Maintainer</role>
+            </roles>
+        </contributor>
+    </contributors>
 
     <dependencies>
         <!-- libraries -->
@@ -124,7 +142,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>config-file-provider</artifactId>
-            <version>2.7.1</version>
+            <version>2.15.6</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -158,6 +176,11 @@
             <classifier>tests</classifier>
             <version>${workflow.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>script-security</artifactId>
+            <version>1.27</version>
         </dependency>
 
         <!-- testing -->
@@ -218,7 +241,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>credentials</artifactId>
-            <version>2.0.7</version>
+            <version>2.1.4</version>
             <scope>test</scope>
         </dependency>
 
@@ -241,7 +264,7 @@
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
         <repository>
             <id>powermock-repo</id>
@@ -277,6 +300,14 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
                     <arguments>-DskipTests=true</arguments>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jenkins-ci.tools</groupId>
+                <artifactId>maven-hpi-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <compatibleSinceVersion>2.57.2</compatibleSinceVersion>
                 </configuration>
             </plugin>
         </plugins>
@@ -327,7 +358,7 @@
     <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
 

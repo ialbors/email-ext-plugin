@@ -51,13 +51,14 @@ public class CulpritsRecipientProvider extends RecipientProvider {
         }
         final Debug debug = new Debug();
         Run<?,?> run = context.getRun();
-        final Result runResult = run.getResult();
         if (run instanceof AbstractBuild) {
             Set<User> users = ((AbstractBuild<?,?>)run).getCulprits();
-            RecipientProviderUtilities.addUsers(users, context.getListener(), env, to, cc, bcc, debug);
-        } else if (runResult != null && runResult.isWorseThan(Result.SUCCESS)) {
+            RecipientProviderUtilities.addUsers(users, context, env, to, cc, bcc, debug);
+        } else {
             List<Run<?, ?>> builds = new ArrayList<>();
             Run<?, ?> build = run;
+            builds.add(build);
+            build = build.getPreviousCompletedBuild();
             while (build != null) {
                 final Result buildResult = build.getResult();
                 if (buildResult != null) {
@@ -71,7 +72,7 @@ public class CulpritsRecipientProvider extends RecipientProvider {
                 build = build.getPreviousCompletedBuild();
             }
             Set<User> users = RecipientProviderUtilities.getChangeSetAuthors(builds, debug);
-            RecipientProviderUtilities.addUsers(users, context.getListener(), env, to, cc, bcc, debug);
+            RecipientProviderUtilities.addUsers(users, context, env, to, cc, bcc, debug);
         }
     }
 

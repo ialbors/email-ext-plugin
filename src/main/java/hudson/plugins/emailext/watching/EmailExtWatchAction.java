@@ -1,11 +1,8 @@
 package hudson.plugins.emailext.watching;
 
 import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
+import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.User;
-import hudson.model.UserPropertyDescriptor;
 import hudson.plugins.emailext.ExtendedEmailPublisher;
 import hudson.plugins.emailext.plugins.EmailTrigger;
 import hudson.tasks.Mailer;
@@ -50,6 +47,11 @@ public class EmailExtWatchAction implements Action {
 
         @Extension
         public static final class DescriptorImpl extends UserPropertyDescriptor {
+
+            public DescriptorImpl() {
+                super(UserProperty.class);
+            }
+
             public String getDisplayName() {
                 return "Extended Email Job Watching";
             }
@@ -61,7 +63,7 @@ public class EmailExtWatchAction implements Action {
 
             @Override
             public UserProperty newInstance(StaplerRequest req, JSONObject json) throws FormException {
-                List<EmailTrigger> triggers = req.bindJSONToList(EmailTrigger.class, json);
+                List<EmailTrigger> triggers = req != null ? req.bindJSONToList(EmailTrigger.class, json) : Collections.<EmailTrigger>emptyList();
                 return new UserProperty(triggers);
             }
         }
