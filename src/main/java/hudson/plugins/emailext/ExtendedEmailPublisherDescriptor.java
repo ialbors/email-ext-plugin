@@ -173,6 +173,11 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
      * Enables the "Watch This Job" feature
      */
     private boolean enableWatching;
+    
+    /**
+     * Enables the "Allow Unregistered Emails" feature
+     */
+    private boolean enableAllowUnregistered;
 
     public ExtendedEmailPublisherDescriptor() {
         super(ExtendedEmailPublisher.class);
@@ -492,9 +497,18 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         return enableWatching;
     }
 
+    public boolean isAllowUnregisteredEnabled() {
+        return enableAllowUnregistered;
+    }
+    
     @SuppressWarnings("unused")
     public void setWatchingEnabled(boolean enabled) {
         this.enableWatching = enabled;
+    }
+    
+    @SuppressWarnings("unused")
+    public void setAllowUnregisteredEnabled(boolean enabled) {
+        this.enableAllowUnregistered = enabled;
     }
 
     public boolean isApplicable(Class<? extends AbstractProject> jobType) {
@@ -554,12 +568,15 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
                 for(EmailTriggerDescriptor t : this.defaultTriggers) {
                     // we have to do the below because a bunch of stuff is not serialized for the Descriptor
                     EmailTriggerDescriptor d = Jenkins.getActiveInstance().getDescriptorByType(t.getClass());
-                    if(!defaultTriggerIds.contains(d.getId())) {
+                    if(d != null && !defaultTriggerIds.contains(d.getId())) {
                         defaultTriggerIds.add(d.getId());
                     }
                 }
             } else {
-                defaultTriggerIds.add(Jenkins.getActiveInstance().getDescriptor(FailureTrigger.class).getId());
+                FailureTrigger.DescriptorImpl f = Jenkins.getActiveInstance().getDescriptorByType(FailureTrigger.DescriptorImpl.class);
+                if (f != null) {
+                    defaultTriggerIds.add(f.getId());
+                }
             }
             save();
         }
@@ -628,6 +645,8 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         requireAdminForTemplateTesting = req.hasParameter("ext_mailer_require_admin_for_template_testing");
 
         enableWatching = req.hasParameter("ext_mailer_watching_enabled");
+        
+        enableAllowUnregistered = req.hasParameter("ext_mailer_allow_unregistered_enabled");
 
         // specify List-ID information
         if (req.hasParameter("ext_mailer_use_list_id")) {

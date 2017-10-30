@@ -28,11 +28,13 @@ import com.google.common.collect.Iterables;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
+import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.User;
 import hudson.plugins.emailext.EmailRecipientUtils;
+import hudson.plugins.emailext.ExtendedEmailPublisher;
 import hudson.plugins.emailext.ExtendedEmailPublisherContext;
 import hudson.scm.ChangeLogSet;
 import hudson.tasks.MailSender;
@@ -67,6 +69,7 @@ public final class RecipientProviderUtilities {
         final Set<User> users = new HashSet<>();
         for (final Run<?, ?> run : runs) {
             debug.send("    build: %d", run.getNumber());
+            // TODO: core 2.60+, workflow-job 2.12+: Switch to checking if run is an instance of RunWithSCM and call getChangeSets directly.
             if (run instanceof AbstractBuild<?,?>) {
                 final ChangeLogSet<?> changeLogSet = ((AbstractBuild<?,?>)run).getChangeSet();
                 if (changeLogSet == null) {
@@ -75,6 +78,7 @@ public final class RecipientProviderUtilities {
                     addChangeSetUsers(changeLogSet, users, debug);
                 }
             } else {
+                // TODO: core 2.60+, workflow-job 2.12+: Decide whether to remove this logic since it won't be needed for Pipelines any more.
                 try {
                     Method getChangeSets = run.getClass().getMethod("getChangeSets");
                     if (List.class.isAssignableFrom(getChangeSets.getReturnType())) {
@@ -197,7 +201,8 @@ public final class RecipientProviderUtilities {
                                 }
                             }
                         } catch (UsernameNotFoundException x) {
-                            if (SEND_TO_UNKNOWN_USERS) {
+                            
+                            if (SEND_TO_UNKNOWN_USERS || ExtendedEmailPublisher.descriptor().isAllowUnregisteredEnabled() ) {
                                 listener.getLogger().printf("Warning: %s is not a recognized user, but sending mail anyway%n", userAddress);
                             } else {
                                 listener.getLogger().printf("Not sending mail to unregistered user %s because your SCM"
