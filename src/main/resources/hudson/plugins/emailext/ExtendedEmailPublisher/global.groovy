@@ -28,6 +28,9 @@ f.section(title: _("Extended E-mail Notification")) {
     f.entry(help: "/descriptor/hudson.tasks.Mailer/help/useSsl", title: _("Use SSL")) {
       f.checkbox(checked: descriptor.mailAccount.useSsl, name: "ext_mailer_smtp_use_ssl")
     }
+    f.entry(help: "/descriptor/hudson.tasks.Mailer/help/useTls", title: _("Use Tls")) {
+      f.checkbox(checked: descriptor.useTls, name: "ext_mailer_smtp_use_tls") 
+    }
     f.entry(help: "/descriptor/hudson.tasks.Mailer/help/smtpPort", title: _("SMTP port")) {
       input(type: "text", class: "setting-input", value: descriptor.mailAccount.smtpPort, name: "ext_mailer_smtp_port")
     }
