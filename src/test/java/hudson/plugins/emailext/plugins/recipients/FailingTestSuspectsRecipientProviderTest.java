@@ -27,7 +27,6 @@ import hudson.PluginManager;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.model.Run;
 import hudson.model.User;
 import hudson.plugins.emailext.ExtendedEmailPublisherDescriptor;
 import hudson.tasks.Mailer;
@@ -71,8 +70,7 @@ public class FailingTestSuspectsRecipientProviderTest {
         PowerMockito.when(jenkins.getPluginManager()).thenReturn(pluginManager);
 
         PowerMockito.mockStatic(Jenkins.class);
-        PowerMockito.doReturn(jenkins).when(Jenkins.class, "getActiveInstance");
-        PowerMockito.doReturn(jenkins).when(Jenkins.class, "getInstance");
+        PowerMockito.doReturn(jenkins).when(Jenkins.class, "get");
 
         final Mailer.DescriptorImpl descriptor = PowerMockito.mock(Mailer.DescriptorImpl.class);
         PowerMockito.when(descriptor.getDefaultSuffix()).thenReturn("DOMAIN");
@@ -108,7 +106,7 @@ public class FailingTestSuspectsRecipientProviderTest {
         MockUtilities.addTestResultAction(build2, build1, build1, build2);
         TestUtilities.checkRecipients(build2, new FailingTestSuspectsRecipientProvider(), "A", "U", "V");
 
-        /**
+        /*
          * Requestor: (none)
          * Committers {X,V}.
          * Tests {c,d} fail.
@@ -120,7 +118,7 @@ public class FailingTestSuspectsRecipientProviderTest {
         MockUtilities.addTestResultAction(build3, build2, build3);
         TestUtilities.checkRecipients(build3, new FailingTestSuspectsRecipientProvider(), "U", "V", "X");
 
-        /**
+        /*
          * Requestor: (none)
          * Committers {K}
          * No tests were performed. The build failed.
@@ -131,7 +129,7 @@ public class FailingTestSuspectsRecipientProviderTest {
         MockUtilities.addChangeSet(build4, "K");
         TestUtilities.checkRecipients(build4, new FailingTestSuspectsRecipientProvider());
 
-        /**
+        /*
          * Requestor: (none)
          * Committers {X,U,V}.
          * No tests were performed. The build failed.
@@ -142,7 +140,7 @@ public class FailingTestSuspectsRecipientProviderTest {
         MockUtilities.addChangeSet(build5, "U", "W");
         TestUtilities.checkRecipients(build5, new FailingTestSuspectsRecipientProvider());
 
-        /**
+        /*
          * Requestor: A
          * Committers {W}.
          * Tests {a,e (new test)} fail.

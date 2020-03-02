@@ -191,7 +191,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
             emergencyReroute = ExtendedEmailPublisher.DEFAULT_EMERGENCY_REROUTE_TEXT;
         }
 
-        if (Jenkins.getActiveInstance().isUseSecurity()
+        if (Jenkins.get().isUseSecurity()
                 && (!StringUtils.isBlank(this.defaultPostsendScript)) || !StringUtils.isBlank(this.defaultPresendScript)) {
             setDefaultPostsendScript(this.defaultPostsendScript);
             setDefaultPresendScript(this.defaultPresendScript);
@@ -245,8 +245,8 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         MailAccount acc = mailAccount;
         if(StringUtils.isNotBlank(from)){
             InternetAddress fromAddress = new InternetAddress(from);
-            for(MailAccount ma : addAccounts){
-                if(!ma.getAddress().equalsIgnoreCase(fromAddress.getAddress())) continue;
+            for(MailAccount ma : addAccounts) {
+                if(ma == null || !ma.isValid() || !ma.getAddress().equalsIgnoreCase(fromAddress.getAddress())) continue;
                 acc = ma;
                 break;
             }
@@ -312,7 +312,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     }
 
     public String getHudsonUrl() {
-        return Jenkins.getActiveInstance().getRootUrl();
+        return Jenkins.get().getRootUrl();
     }
 
     public List<MailAccount> getAddAccounts() {
@@ -591,7 +591,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
     }
 
     public void setDefaultClasspath(List<GroovyScriptPath> defaultClasspath) throws FormException {
-        if (Jenkins.getActiveInstance().isUseSecurity()) {
+        if (Jenkins.get().isUseSecurity()) {
             ScriptApproval approval = ScriptApproval.get();
             ApprovalContext context = ApprovalContext.create().withCurrentUser();
             for (GroovyScriptPath path : defaultClasspath) {
@@ -614,13 +614,13 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
                 defaultTriggerIds.clear();
                 for (EmailTriggerDescriptor t : this.defaultTriggers) {
                     // we have to do the below because a bunch of stuff is not serialized for the Descriptor
-                    EmailTriggerDescriptor d = Jenkins.getActiveInstance().getDescriptorByType(t.getClass());
+                    EmailTriggerDescriptor d = Jenkins.get().getDescriptorByType(t.getClass());
                     if (d != null && !defaultTriggerIds.contains(d.getId())) {
                         defaultTriggerIds.add(d.getId());
                     }
                 }
             } else {
-                FailureTrigger.DescriptorImpl f = Jenkins.getActiveInstance().getDescriptorByType(FailureTrigger.DescriptorImpl.class);
+                FailureTrigger.DescriptorImpl f = Jenkins.get().getDescriptorByType(FailureTrigger.DescriptorImpl.class);
                 if (f != null) {
                     defaultTriggerIds.add(f.getId());
                 }
@@ -644,10 +644,17 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         Object addacc = formData.opt("addAccounts");
         if(addacc != null){
             if(addacc instanceof JSONArray){
-                for(Object obj : (JSONArray)addacc) addAccounts.add(new MailAccount((JSONObject)obj));
-            }
-            else if(addacc instanceof JSONObject){
-                addAccounts.add(new MailAccount((JSONObject)addacc));
+                for(Object obj : (JSONArray)addacc) {
+                    MailAccount account = new MailAccount((JSONObject)obj);
+                    if(account.isValid()) {
+                        addAccounts.add(account);
+                    }
+                }
+            } else if(addacc instanceof JSONObject){
+                MailAccount account = new MailAccount((JSONObject)addacc);
+                if(account.isValid()) {
+                    addAccounts.add(account);
+                }
             }
         }
 
@@ -729,7 +736,7 @@ public final class ExtendedEmailPublisherDescriptor extends BuildStepDescriptor<
         if (!ids.isEmpty()) {
             defaultTriggerIds.clear();
             for (String id : ids) {
-                EmailTriggerDescriptor d = (EmailTriggerDescriptor) Jenkins.getActiveInstance().getDescriptor(id);
+                EmailTriggerDescriptor d = (EmailTriggerDescriptor) Jenkins.get().getDescriptor(id);
                 if (d != null) {
                     defaultTriggerIds.add(id);
                 }

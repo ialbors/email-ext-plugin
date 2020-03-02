@@ -25,12 +25,12 @@ package hudson.plugins.emailext.plugins.recipients;
 
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.User;
 import hudson.plugins.emailext.ExtendedEmailPublisherContext;
 import hudson.plugins.emailext.ExtendedEmailPublisherDescriptor;
+import hudson.plugins.emailext.Messages;
 import hudson.plugins.emailext.plugins.RecipientProvider;
 import hudson.plugins.emailext.plugins.RecipientProviderDescriptor;
 import jenkins.model.Jenkins;
@@ -59,7 +59,7 @@ public class FirstFailingBuildSuspectsRecipientProvider extends RecipientProvide
 
         final class Debug implements RecipientProviderUtilities.IDebug {
             private final ExtendedEmailPublisherDescriptor descriptor
-                = Jenkins.getActiveInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
+                = Jenkins.get().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
 
             private final PrintStream logger = context.getListener().getLogger();
 
@@ -91,11 +91,7 @@ public class FirstFailingBuildSuspectsRecipientProvider extends RecipientProvide
                     firstFailedBuild = candidate;
                     candidate = candidate.getPreviousCompletedBuild();
                 }
-                if (firstFailedBuild instanceof AbstractBuild) {
-                    buildsWithSuspects.add(firstFailedBuild);
-                } else {
-                    debug.send("  firstFailedBuild was not an instance of AbstractBuild");
-                }
+                buildsWithSuspects.add(firstFailedBuild);
                 debug.send("Collecting suspects...");
                 users.addAll(RecipientProviderUtilities.getChangeSetAuthors(buildsWithSuspects, debug));
                 users.addAll(RecipientProviderUtilities.getUsersTriggeringTheBuilds(buildsWithSuspects, debug));
@@ -109,10 +105,10 @@ public class FirstFailingBuildSuspectsRecipientProvider extends RecipientProvide
     @Extension
     @Symbol("brokenBuildSuspects")
     public static final class DescriptorImpl extends RecipientProviderDescriptor {
+
         @Override
         public String getDisplayName() {
-            return "Suspects Causing the Build to Begin Failing";
+            return Messages.FirstFailingBuildSuspectsRecipientProvider_DisplayName();
         }
     }
-
 }

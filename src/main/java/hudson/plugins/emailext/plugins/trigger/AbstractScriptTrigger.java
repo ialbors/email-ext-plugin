@@ -106,21 +106,21 @@ public abstract class AbstractScriptTrigger extends EmailTrigger {
     }
     
     private Object evaluate(AbstractBuild<?, ?> build, TaskListener listener) throws IOException {
-        ClassLoader loader = Jenkins.getActiveInstance().getPluginManager().uberClassLoader;
+        ClassLoader loader = Jenkins.get().getPluginManager().uberClassLoader;
         JenkinsLocationConfiguration configuration = JenkinsLocationConfiguration.get();
         assert configuration != null;
 
         URLClassLoader urlcl = null;
         List<ClasspathEntry> cp = secureTriggerScript.getClasspath();
         if (!cp.isEmpty()) {
-            List<URL> urlList = new ArrayList<URL>(cp.size());
+            List<URL> urlList = new ArrayList<>(cp.size());
 
             for (ClasspathEntry entry : cp) {
                 ScriptApproval.get().using(entry);
                 urlList.add(entry.getURL());
             }
 
-            loader = urlcl = new URLClassLoader(urlList.toArray(new URL[urlList.size()]), loader);
+            loader = urlcl = new URLClassLoader(urlList.toArray(new URL[0]), loader);
         }
         try {
             loader = GroovySandbox.createSecureClassLoader(loader);

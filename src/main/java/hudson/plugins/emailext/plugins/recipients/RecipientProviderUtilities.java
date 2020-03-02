@@ -23,12 +23,8 @@
  */
 package hudson.plugins.emailext.plugins.recipients;
 
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import hudson.EnvVars;
-import hudson.model.AbstractBuild;
 import hudson.model.Cause;
-import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -39,6 +35,7 @@ import hudson.plugins.emailext.ExtendedEmailPublisherContext;
 import hudson.scm.ChangeLogSet;
 import hudson.tasks.MailSender;
 import jenkins.model.Jenkins;
+import jenkins.scm.RunWithSCM;
 import org.acegisecurity.Authentication;
 import org.acegisecurity.userdetails.UsernameNotFoundException;
 
@@ -46,8 +43,6 @@ import javax.annotation.CheckForNull;
 import javax.mail.internet.InternetAddress;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -70,25 +65,10 @@ public final class RecipientProviderUtilities {
         final Set<User> users = new HashSet<>();
         for (final Run<?, ?> run : runs) {
             debug.send("    build: %d", run.getNumber());
-            // TODO: core 2.60+, workflow-job 2.12+: Switch to checking if run is an instance of RunWithSCM and call getChangeSets directly.
-            if (run instanceof AbstractBuild<?,?>) {
-                final ChangeLogSet<?> changeLogSet = ((AbstractBuild<?,?>)run).getChangeSet();
-                addChangeSetUsers(changeLogSet, users, debug);
-            } else {
-                // TODO: core 2.60+, workflow-job 2.12+: Decide whether to remove this logic since it won't be needed for Pipelines any more.
-                try {
-                    Method getChangeSets = run.getClass().getMethod("getChangeSets");
-                    if (List.class.isAssignableFrom(getChangeSets.getReturnType())) {
-                        @SuppressWarnings("unchecked")
-                        List<ChangeLogSet<ChangeLogSet.Entry>> sets = (List<ChangeLogSet<ChangeLogSet.Entry>>) getChangeSets.invoke(run);
-                        if (Iterables.all(sets, Predicates.instanceOf(ChangeLogSet.class))) {
-                            for (ChangeLogSet<ChangeLogSet.Entry> set : sets) {
-                                addChangeSetUsers(set, users, debug);
-                            }
-                        }
-                    }
-                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-                    debug.send("Exception getting changesets for %s: %s", run, e);
+            if (run instanceof RunWithSCM) {
+                List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = ((RunWithSCM<?, ?>) run).getChangeSets();
+                for (ChangeLogSet<? extends ChangeLogSet.Entry> changeSet : changeSets) {
+                    addChangeSetUsers(changeSet, users, debug);
                 }
             }
         }
@@ -96,7 +76,7 @@ public final class RecipientProviderUtilities {
     }
 
     private static void addChangeSetUsers(ChangeLogSet<?> changeLogSet, Set<User> users, IDebug debug) {
-        final Set<User> changeAuthors = new HashSet<User>();
+        final Set<User> changeAuthors = new HashSet<>();
         for (final ChangeLogSet.Entry change : changeLogSet) {
             final User changeAuthor = change.getAuthor();
             if (changeAuthors.add(changeAuthor)) {
@@ -186,7 +166,7 @@ public final class RecipientProviderUtilities {
             } else {
                 final String userAddress = EmailRecipientUtils.getUserConfiguredEmail(user);
                 if (userAddress != null) {
-                    if (Jenkins.getActiveInstance().isUseSecurity()) {
+                    if (Jenkins.get().isUseSecurity()) {
                         try {
                             Authentication auth = user.impersonate();
                             if (run != null && !run.getACL().hasPermission(auth, Item.READ)) {

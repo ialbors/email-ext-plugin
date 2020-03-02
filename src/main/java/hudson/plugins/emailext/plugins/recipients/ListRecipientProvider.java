@@ -12,6 +12,7 @@ import hudson.model.Job;
 import hudson.plugins.emailext.EmailRecipientUtils;
 import hudson.plugins.emailext.ExtendedEmailPublisherContext;
 import hudson.plugins.emailext.ExtendedEmailPublisherDescriptor;
+import hudson.plugins.emailext.Messages;
 import hudson.plugins.emailext.plugins.RecipientProvider;
 import hudson.plugins.emailext.plugins.RecipientProviderDescriptor;
 import jenkins.model.Jenkins;
@@ -32,27 +33,27 @@ public class ListRecipientProvider extends RecipientProvider {
 
     @DataBoundConstructor
     public ListRecipientProvider() {
-        
+
     }
-    
+
     @Override
     public void addRecipients(ExtendedEmailPublisherContext context, EnvVars env, Set<InternetAddress> to, Set<InternetAddress> cc, Set<InternetAddress> bcc) {
         try {
-            ExtendedEmailPublisherDescriptor descriptor = Jenkins.getActiveInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
+            ExtendedEmailPublisherDescriptor descriptor = Jenkins.get().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
             descriptor.debug(context.getListener().getLogger(), "Adding recipients from project recipient list");
             EmailRecipientUtils.addAddressesFromRecipientList(to, cc, bcc, EmailRecipientUtils.getRecipientList(context, context.getPublisher().recipientList), env, context.getListener());
         } catch (MessagingException ex) {
             Logger.getLogger(ListRecipientProvider.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     @Extension
     @Symbol("recipients")
     public static final class DescriptorImpl extends RecipientProviderDescriptor {
-        
+
         @Override
         public String getDisplayName() {
-            return "Recipient List";
+            return Messages.ListRecipientProvider_DisplayName();
         }
 
         @Override

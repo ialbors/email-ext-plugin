@@ -14,7 +14,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
-import org.jvnet.hudson.test.recipes.WithPlugin;
 import org.jvnet.mock_javamail.Mailbox;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -62,7 +61,7 @@ public class EmailExtStepTest {
     @Test
     public void simpleEmail() throws Exception {
         WorkflowJob job = j.getInstance().createProject(WorkflowJob.class, "wf");
-        job.setDefinition(new CpsFlowDefinition("node { emailext(to: 'mickeymouse@disney.com', subject: 'Boo') }"));
+        job.setDefinition(new CpsFlowDefinition("node { emailext(to: 'mickeymouse@disney.com', subject: 'Boo') }", true));
         Run<?,?> run = job.scheduleBuild2(0).get();
         j.assertBuildStatusSuccess(run);
 
@@ -75,7 +74,7 @@ public class EmailExtStepTest {
     @Test
     public void attachLog() throws Exception {
         WorkflowJob job = j.getInstance().createProject(WorkflowJob.class, "wf");
-        job.setDefinition(new CpsFlowDefinition("node { emailext(to: 'mickeymouse@disney.com', subject: 'Boo', attachLog: true) }"));
+        job.setDefinition(new CpsFlowDefinition("node { emailext(to: 'mickeymouse@disney.com', subject: 'Boo', attachLog: true) }", true));
         Run<?,?> run = job.scheduleBuild2(0).get();
         j.assertBuildStatusSuccess(run);
 
@@ -101,7 +100,7 @@ public class EmailExtStepTest {
         final File attachment = new File(url.getFile());
 
         WorkflowJob job = j.getInstance().createProject(WorkflowJob.class, "wf");
-        job.setDefinition(new CpsFlowDefinition("node { fileCopy('" + StringEscapeUtils.escapeJava(attachment.getAbsolutePath()) + "'); emailext (to: 'mickeymouse@disney.com', subject: 'Boo', body: 'Here is your file', attachmentsPattern: '*.pdf') }"));
+        job.setDefinition(new CpsFlowDefinition("node { fileCopy('" + StringEscapeUtils.escapeJava(attachment.getAbsolutePath()) + "'); emailext (to: 'mickeymouse@disney.com', subject: 'Boo', body: 'Here is your file', attachmentsPattern: '*.pdf') }", true));
         Run<?,?> run = job.scheduleBuild2(0).get();
         j.assertBuildStatusSuccess(run);
 
@@ -127,7 +126,7 @@ public class EmailExtStepTest {
                 "node {\n" +
                         "  emailext(to: 'mickeymouse@disney.com', subject: 'Boo', saveOutput: true)\n" +
                         "  archiveArtifacts '*.*'\n" +
-                        "}", false));
+                        "}", true));
         Run<?,?> run = job.scheduleBuild2(0).get();
         j.assertBuildStatusSuccess(run);
 

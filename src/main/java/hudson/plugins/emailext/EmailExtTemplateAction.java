@@ -52,7 +52,7 @@ public class EmailExtTemplateAction implements Action {
     
     private String renderError(Exception ex) {
         StringBuilder builder = new StringBuilder();
-        builder.append("<h3>An error occured trying to render the template:</h3><br/><span style=\"color:red; font-weight:bold\">")
+        builder.append("<h3>An error occurred trying to render the template:</h3><br/><span style=\"color:red; font-weight:bold\">")
                 .append(ex.toString().replace("\n", "<br/>")).append("</span>");
         return builder.toString();
     }
@@ -66,7 +66,7 @@ public class EmailExtTemplateAction implements Action {
                 InputStream inputStream = Thread.currentThread().getContextClassLoader()
                 		.getResourceAsStream("hudson/plugins/emailext/templates/" + value);                
                 if(inputStream == null) {                
-                    final File scriptsFolder = new File(Jenkins.getActiveInstance().getRootDir(), "email-templates");
+                    final File scriptsFolder = new File(Jenkins.get().getRootDir(), "email-templates");
                     final File scriptFile = new File(scriptsFolder, value);
                     try {
                         if(!scriptFile.exists() || !AbstractEvalContent.isChildOf(new FilePath(scriptFile), new FilePath(scriptsFolder))) {
@@ -83,7 +83,7 @@ public class EmailExtTemplateAction implements Action {
     }
     
     private FormValidation checkForManagedFile(final String value) {
-        Plugin plugin = Jenkins.getActiveInstance().getPlugin("config-file-provider");
+        Plugin plugin = Jenkins.get().getPlugin("config-file-provider");
         if(plugin != null) {
             Config config = null;
             Collection<ConfigProvider> providers = getTemplateConfigProviders();

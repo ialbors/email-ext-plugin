@@ -17,7 +17,6 @@ import org.apache.commons.jelly.XMLOutput;
 import org.jenkinsci.lib.configprovider.ConfigProvider;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
-import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 import org.jenkinsci.plugins.scriptsecurity.scripts.languages.JellyLanguage;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
 import org.xml.sax.InputSource;
@@ -28,7 +27,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.nio.file.attribute.UserDefinedFileAttributeView;
 
 @EmailToken
 public class JellyScriptContent extends AbstractEvalContent {
@@ -50,7 +48,7 @@ public class JellyScriptContent extends AbstractEvalContent {
         InputStream inputStream = null;
 
         try {
-            inputStream = getFileInputStream(workspace, template, JELLY_EXTENSION);
+            inputStream = getFileInputStream(run, workspace, template, JELLY_EXTENSION);
             return renderContent(run, inputStream, listener);
         } catch (JellyException e) {
             return "JellyException: " + e.getMessage();
@@ -97,7 +95,7 @@ public class JellyScriptContent extends AbstractEvalContent {
 
     private JellyContext createContext(Object it, @Nonnull Run<?, ?> build, @Nonnull TaskListener listener) {
         JellyContext context = new JellyContext();
-        ExtendedEmailPublisherDescriptor descriptor = Jenkins.getActiveInstance().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
+        ExtendedEmailPublisherDescriptor descriptor = Jenkins.get().getDescriptorByType(ExtendedEmailPublisherDescriptor.class);
         context.setVariable("it", it);
         context.setVariable("build", build);
         context.setVariable("project", build.getParent());

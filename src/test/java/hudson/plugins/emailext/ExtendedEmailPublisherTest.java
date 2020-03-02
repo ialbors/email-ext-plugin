@@ -5,7 +5,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.model.Cause.UserCause;
+import hudson.model.Cause.UserIdCause;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -15,7 +15,6 @@ import hudson.model.User;
 import hudson.plugins.emailext.plugins.EmailTrigger;
 import hudson.plugins.emailext.plugins.RecipientProvider;
 import hudson.plugins.emailext.plugins.recipients.ListRecipientProvider;
-import hudson.plugins.emailext.plugins.recipients.RecipientProviderUtilities;
 import hudson.plugins.emailext.plugins.recipients.RequesterRecipientProvider;
 import hudson.plugins.emailext.plugins.trigger.AbortedTrigger;
 import hudson.plugins.emailext.plugins.trigger.AlwaysTrigger;
@@ -31,15 +30,13 @@ import hudson.plugins.emailext.plugins.trigger.SuccessTrigger;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.SecurityRealm;
 import hudson.tasks.Builder;
-import hudson.tasks.MailSender;
 import hudson.tasks.Mailer;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
-import org.hamcrest.collection.IsEmptyCollection;
 import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
-import org.jenkinsci.plugins.scriptsecurity.scripts.UnapprovedClasspathException;
 import org.junit.*;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -47,8 +44,6 @@ import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockBuilder;
 import org.jvnet.hudson.test.SleepBuilder;
-import org.jvnet.hudson.test.TestBuilder;
-import org.jvnet.hudson.test.recipes.WithPlugin;
 import org.jvnet.mock_javamail.Mailbox;
 import org.kohsuke.stapler.Stapler;
 
@@ -59,25 +54,22 @@ import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import org.junit.ClassRule;
-import static org.junit.matchers.JUnitMatchers.containsString;
-import static org.junit.matchers.JUnitMatchers.hasItem;
-import static org.junit.matchers.JUnitMatchers.hasItems;
-import org.jvnet.hudson.test.BuildWatcher;
 
 public class ExtendedEmailPublisherTest {
 
@@ -592,12 +584,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -624,12 +616,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -659,12 +651,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -688,12 +680,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -720,12 +712,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -767,12 +759,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -809,12 +801,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -880,7 +872,7 @@ public class ExtendedEmailPublisherTest {
                 + "msg.setHeader('Message-ID', ExtendedEmailPublisherTestHelper.messageid())");
         Field f = ExtendedEmailPublisherDescriptor.class.getDeclaredField("defaultClasspath");
         f.setAccessible(true);
-        List<GroovyScriptPath> classpath = new ArrayList<GroovyScriptPath>();
+        List<GroovyScriptPath> classpath = new ArrayList<>();
         classpath.add(new GroovyScriptPath("src/test/postsend"));
         f.set(publisher.getDescriptor(), classpath);
 
@@ -898,12 +890,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -923,12 +915,12 @@ public class ExtendedEmailPublisherTest {
         publisher.getConfiguredTriggers().add(successTrigger);
         publisher.replyTo = "ashlux@gmail.com";
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -954,12 +946,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
 
-        UserCause cause = new MockUserCause("kutzi");
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatusSuccess(build);
@@ -972,16 +964,6 @@ public class ExtendedEmailPublisherTest {
         assertEquals(1, replyTo.length);
 
         assertEquals("address not configured yet <nobody@nowhere>", replyTo[0].toString());
-    }
-
-    private static class MockUserCause extends UserCause {
-
-        public MockUserCause(String userName) throws Exception {
-            super();
-            Field f = UserCause.class.getDeclaredField("authenticationName");
-            f.setAccessible(true);
-            f.set(this, userName);
-        }
     }
 
     @Test
@@ -1291,11 +1273,12 @@ public class ExtendedEmailPublisherTest {
         });
         publisher.getConfiguredTriggers().add(successTrigger);
 
-        User u = User.get("kutzi");
+        User u = User.getById("kutzi", true);
         u.setFullName("Christoph Kutzinski");
         Mailer.UserProperty prop = new Mailer.UserProperty("kutzi@xxx.com");
         u.addProperty(prop);
-        UserCause cause = new MockUserCause("kutzi");
+
+        UserIdCause cause = new UserIdCause("kutzi");
 
         FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
         j.assertBuildStatus(Result.SUCCESS, build);
